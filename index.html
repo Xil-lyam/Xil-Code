@@ -52,16 +52,23 @@ input[type=text]{background:#0c111b;border:1px solid var(--line);color:var(--tex
 .preview-frame-wrap{flex:1 1 auto;min-height:0}
 .console{height:64px;max-height:22%;flex-shrink:0}
 .mobile-switch{display:none!important}
+/* Répartition adaptative : l'aperçu est prioritaire, le code reste compact. */
+.workspace{overflow:hidden}
+.right{flex:0 1 66%!important;min-height:110px!important;overflow:hidden}
+.left{flex:1 1 34%!important;min-height:110px!important;overflow:hidden}
+.preview-frame-wrap{overflow:auto;overscroll-behavior:contain}
+.editor-area{overflow:hidden}
+.console{height:42px;max-height:16%;min-height:27px}
 @media(max-width:760px){
  .workspace.show-preview .left,.workspace.show-preview .right{display:flex!important}
- .right{flex-basis:40%!important;min-height:155px!important}
- .left{flex-basis:60%!important;min-height:190px!important}
- .preview-head{height:36px;flex-shrink:0}
- .console{height:48px;max-height:18%}
- .console-head{height:27px}
- .console-body{padding:4px 9px}
- .editor-top{height:38px;flex-shrink:0}
- .bottom-editor{height:27px;flex-shrink:0}
+ .right{flex:0 1 66%!important;min-height:105px!important}
+ .left{flex:1 1 34%!important;min-height:105px!important}
+ .preview-head{height:34px;flex-shrink:0}
+ .console{height:36px;max-height:14%;min-height:25px}
+ .console-head{height:25px;flex-shrink:0}
+ .console-body{padding:3px 8px}
+ .editor-top{height:35px;flex-shrink:0}
+ .bottom-editor{height:25px;flex-shrink:0}
 }
 
 </style>
