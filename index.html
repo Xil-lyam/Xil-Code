@@ -30,6 +30,12 @@ main{height:calc(100dvh - var(--top));display:flex;flex-direction:column;min-hei
 .diagnostic b{color:#fb7185}.diagnostic.warn b{color:#fbbf24}.diagnostic span{color:#cbd5e1}
 .cm-error-line{background:linear-gradient(90deg,#fb718522,transparent)}
 .fallback-editor{width:100%;height:100%;resize:none;border:0;outline:0;background:#171b27;color:#e6e6e6;padding:15px;font:13px/1.65 monospace;tab-size:2}
+#suggestBox{display:none;position:absolute;z-index:30;left:18px;top:18px;min-width:190px;max-width:min(290px,85%);max-height:190px;overflow:auto;background:#171d2b;border:1px solid #6852a5;border-radius:9px;box-shadow:0 12px 30px #0009;padding:5px;font:13px/1.4 system-ui,sans-serif}
+#suggestBox.open{display:block}
+.suggest-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;color:#e8edf8}
+.suggest-item.active{background:#49366f}
+.suggest-item small{margin-left:auto;color:#9ca3af;font-size:10px}
+.suggest-item .kind{width:18px;color:#a78bfa;font-weight:800;text-align:center}
 .bottom-editor{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#111725;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
 .right{flex:1;min-width:260px;display:flex;flex-direction:column;min-height:0;background:#fff;color:#111}
 .preview-head{height:43px;display:flex;align-items:center;gap:8px;padding:0 11px;background:var(--panel);color:var(--text);border-bottom:1px solid var(--line)}
@@ -104,6 +110,7 @@ input[type=text]{background:#0c111b;border:1px solid var(--line);color:var(--tex
    </div>
    <div class="editor-area" id="editorArea">
     <textarea class="fallback-editor" id="fallbackEditor" spellcheck="false"></textarea>
+    <div id="suggestBox" role="listbox" aria-label="Suggestions de code"></div>
    </div>
    <div class="bottom-editor"><span id="editorHint">HTML · Modifie le code pour voir le résultat</span><span>UTF-8&nbsp; · &nbsp;2 espaces</span></div>
   </div>
@@ -193,6 +200,45 @@ function setupAutocomplete(cm,lang){
   }
  });
  cm.on('keydown',(editor,e)=>{if((e.ctrlKey||e.metaKey)&&e.key===' '){e.preventDefault();CodeMirror.showHint(editor,lang==='html'?CodeMirror.hint.html:lang==='css'?CodeMirror.hint.css:CodeMirror.hint.javascript,{completeSingle:false})}});
+}
+
+const suggestionSets={
+ html:['!DOCTYPE html','html','head','meta','title','body','main','header','nav','section','article','div','span','h1','h2','h3','p','a','button','input','form','img','ul','li','footer','script','style'],
+ css:['color','background','background-color','display','flex','grid','width','height','min-height','max-width','margin','padding','border','border-radius','box-shadow','font-size','font-family','font-weight','gap','justify-content','align-items','position','top','left','transform','transition','opacity','overflow','z-index',':hover','@media'],
+ js:['const','let','var','function','return','if','else','for','while','document','querySelector','addEventListener','textContent','innerHTML','classList','createElement','console.log','setTimeout','async','await','true','false','null']
+};
+let suggestionIndex=0,suggestionItems=[],suggestionRange=null;
+function closeSuggestions(){$('suggestBox').classList.remove('open');$('suggestBox').innerHTML='';suggestionItems=[];suggestionRange=null}
+function updateFallbackSuggestions(){
+ if(!fallback||current!=='html'&&current!=='css'&&current!=='js')return closeSuggestions();
+ const ta=$('fallbackEditor'),pos=ta.selectionStart,text=ta.value.slice(0,pos),line=text.split('\\n').pop();
+ let prefix='',start=pos,items=[];
+ if(current==='html'){
+  const m=line.match(/<([a-zA-Z!\\-]*)$/);
+  if(m){prefix=m[1];start=pos-prefix.length;items=suggestionSets.html}
+ }else if(current==='css'){
+  const m=line.match(/([a-zA-Z-]+)$/);
+  if(m&&(/\\{[^}]*$/.test(text)||/^[ \\t]*[a-z-]*$/.test(line))){prefix=m[1];start=pos-prefix.length;items=suggestionSets.css}
+ }else{
+  const m=line.match(/([a-zA-Z_$][\\w$]*)$/);
+  if(m){prefix=m[1];start=pos-prefix.length;items=suggestionSets.js}
+ }
+ const filtered=items.filter(x=>x.toLowerCase().startsWith(prefix.toLowerCase())&&x.toLowerCase()!==prefix.toLowerCase()).slice(0,9);
+ if(!filtered.length)return closeSuggestions();
+ suggestionItems=filtered;suggestionRange={start,end:pos};suggestionIndex=0;
+ const box=$('suggestBox');box.innerHTML='';
+ filtered.forEach((value,i)=>{const row=document.createElement('div');row.className='suggest-item'+(i===0?' active':'');row.innerHTML='<span class="kind">◆</span><span></span><small>'+current.toUpperCase()+'</small>';row.children[1].textContent=value;row.addEventListener('pointerdown',e=>{e.preventDefault();applySuggestion(i)});box.appendChild(row)});
+ const lineNo=text.split('\\n').length-1,lh=21.5,top=Math.max(4,Math.min(ta.clientHeight-205,15+lineNo*lh-ta.scrollTop+lh));
+ box.style.top=top+'px';box.style.left='18px';box.classList.add('open');
+}
+function applySuggestion(index){
+ const ta=$('fallbackEditor'),value=suggestionItems[index],range=suggestionRange;if(!value||!range)return;
+ let insert=value;
+ if(current==='html'&&value==='!DOCTYPE html')insert='!DOCTYPE html>';
+ else if(current==='html')insert=value+'>';
+ else if(current==='css'&&value[0]!==':'&&value[0]!=='@')insert=value+': ';
+ else if(current==='css'&&(value[0]===':'||value[0]==='@'))insert=value;
+ ta.setRangeText(insert,range.start,range.end,'end');ta.focus();code[current]=ta.value;closeSuggestions();markUnsaved();scheduleRun();
 }
 function initEditor(){
  if(!window.CodeMirror){$('fallbackEditor').value=code.html;fallback=true;return}
@@ -319,7 +365,15 @@ $('fullscreenBtn').onclick=()=>{const el=$('workspace');if(!document.fullscreenE
 $('codeViewBtn').onclick=()=>{$('workspace').classList.remove('show-preview');$('codeViewBtn').classList.add('active');$('previewViewBtn').classList.remove('active')};
 $('previewViewBtn').onclick=()=>{$('workspace').classList.add('show-preview');$('previewViewBtn').classList.add('active');$('codeViewBtn').classList.remove('active');run()};
 $('openPreviewBtn').onclick=()=>{const w=window.open();if(w){w.document.open();w.document.write(getDocument());w.document.close()}else toast('Autorise les fenêtres pop-up pour cette action')};
-$('fallbackEditor').addEventListener('input',e=>{code[current]=e.target.value;markUnsaved();scheduleRun()});
+$('fallbackEditor').addEventListener('input',e=>{code[current]=e.target.value;markUnsaved();scheduleRun();updateFallbackSuggestions()});
+$('fallbackEditor').addEventListener('keydown',e=>{
+ if(!$('suggestBox').classList.contains('open'))return;
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();suggestionIndex=(suggestionIndex+(e.key==='ArrowDown'?1:-1)+suggestionItems.length)%suggestionItems.length;$('suggestBox').querySelectorAll('.suggest-item').forEach((el,i)=>el.classList.toggle('active',i===suggestionIndex))}
+ else if(e.key==='Enter'||e.key==='Tab'){e.preventDefault();applySuggestion(suggestionIndex)}
+ else if(e.key==='Escape')closeSuggestions();
+});
+$('fallbackEditor').addEventListener('click',closeSuggestions);
+$('fallbackEditor').addEventListener('blur',()=>setTimeout(closeSuggestions,180));
 $('projectName').addEventListener('input',markUnsaved);
 window.addEventListener('beforeunload',()=>{if($('saveStatus').textContent.includes('Modifications'))saveProject(true)});
 initEditor();
