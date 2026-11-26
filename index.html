@@ -24,6 +24,11 @@ main{height:calc(100dvh - var(--top));display:flex;flex-direction:column;min-hei
 .editor-top{height:43px;display:flex;align-items:center;padding:0 10px;gap:6px;border-bottom:1px solid var(--line);background:var(--panel)}
 .tab{border:0;background:transparent;border-radius:7px;padding:8px 13px;color:var(--muted);font-weight:650}.tab.active{background:#28213f;color:#c4b5fd}.tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;background:#f97316}.tab[data-lang=css] .dot{background:#38bdf8}.tab[data-lang=js] .dot{background:#facc15}
 .editor-area{flex:1;min-height:0;position:relative;background:#171b27}.CodeMirror{height:100%;font:13px/1.65 'SFMono-Regular',Consolas,monospace}.CodeMirror-gutters{background:#141925;border-right:1px solid #252d40}.CodeMirror-linenumber{color:#68738b}.CodeMirror-cursor{border-left:2px solid #c4b5fd!important}.CodeMirror-selected{background:#39345c!important}
+.CodeMirror-hints{z-index:9999;background:#171d2b;border:1px solid #514477;color:#e8edf8;box-shadow:0 10px 35px #0009}
+.CodeMirror-hint{color:#e8edf8;padding:6px 10px}.CodeMirror-hint-active{background:#514078;color:#fff}
+.diagnostic{display:flex;gap:7px;align-items:flex-start;padding:4px 0;border-bottom:1px solid #222b3b;cursor:pointer}
+.diagnostic b{color:#fb7185}.diagnostic.warn b{color:#fbbf24}.diagnostic span{color:#cbd5e1}
+.cm-error-line{background:linear-gradient(90deg,#fb718522,transparent)}
 .fallback-editor{width:100%;height:100%;resize:none;border:0;outline:0;background:#171b27;color:#e6e6e6;padding:15px;font:13px/1.65 monospace;tab-size:2}
 .bottom-editor{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#111725;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
 .right{flex:1;min-width:260px;display:flex;flex-direction:column;min-height:0;background:#fff;color:#111}
@@ -111,6 +116,11 @@ input[type=text]{background:#0c111b;border:1px solid var(--line);color:var(--tex
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
 <script>
 (()=>{'use strict';
 const starter={
@@ -166,6 +176,17 @@ let code={...starter};
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1900)}
 function getCode(lang){return editors[lang]?editors[lang].getValue():$('fallbackEditor').value}
 function setCode(lang,value){code[lang]=value;if(editors[lang])editors[lang].setValue(value)}
+function setupAutocomplete(cm,lang){
+ if(!CodeMirror.showHint)return;
+ cm.on('inputRead',(editor,change)=>{
+  if(change.text && change.text.join('').length){
+   const ch=editor.getCursor().ch, line=editor.getLine(editor.getCursor().line);
+   const trigger=lang==='html'?/[<\\/a-z]$/i.test(line):lang==='css'?/[.#a-z-]$/i.test(line):/[.$a-z_]$/i.test(line);
+   if(trigger)CodeMirror.showHint(editor,lang==='html'?CodeMirror.hint.html:lang==='css'?CodeMirror.hint.css:CodeMirror.hint.javascript,{completeSingle:false});
+  }
+ });
+ cm.on('keydown',(editor,e)=>{if((e.ctrlKey||e.metaKey)&&e.key===' '){e.preventDefault();CodeMirror.showHint(editor,lang==='html'?CodeMirror.hint.html:lang==='css'?CodeMirror.hint.css:CodeMirror.hint.javascript,{completeSingle:false})}});
+}
 function initEditor(){
  if(!window.CodeMirror){$('fallbackEditor').value=code.html;fallback=true;return}
  fallback=false;
@@ -175,6 +196,7 @@ function initEditor(){
   const host=document.createElement('textarea');host.value=code[lang];$('editorArea').appendChild(host);
   const cm=CodeMirror.fromTextArea(host,{theme:'dracula',mode:modes[lang],lineNumbers:true,indentUnit:2,tabSize:2,indentWithTabs:false,autoCloseBrackets:true,matchBrackets:true,lineWrapping:false,viewportMargin:Infinity});
   cm.on('change',()=>{code[lang]=cm.getValue();markUnsaved();if(lang===current)scheduleRun();});
+  setupAutocomplete(cm,lang);
   cm.on('cursorActivity',()=>{const c=cm.getCursor();$('cursorPos').textContent=`Ligne ${c.line+1}, Col ${c.ch+1}`});
   editors[lang]=cm;
   host.nextSibling.style.display=lang===current?'':'none';
@@ -197,13 +219,45 @@ function getDocument(){
  return h;
 }
 function clearConsole(){ $('consoleBody').textContent='';$('consoleCount').textContent='0 message'; }
+function showDiagnostics(items){
+ const box=$('consoleBody');box.innerHTML='';
+ $('consoleCount').textContent=items.length+' problème(s)';
+ if(!items.length){box.textContent='✓ Aucune erreur détectée dans le code analysé.';box.className='console-body log-info';return}
+ box.className='console-body';
+ items.forEach(d=>{
+  const row=document.createElement('div');row.className='diagnostic'+(d.type==='warn'?' warn':'');
+  const b=document.createElement('b');b.textContent=d.type==='warn'?'AVERTISSEMENT':'ERREUR';
+  const msg=document.createElement('span');msg.textContent=d.lang.toUpperCase()+' · Ligne '+d.line+' : '+d.message;
+  row.append(b,msg);row.onclick=()=>{showLang(d.lang);if(editors[d.lang]){editors[d.lang].setCursor({line:Math.max(0,d.line-1),ch:0});editors[d.lang].focus()}};
+  box.appendChild(row);
+ });
+}
+function analyseCode(){
+ const issues=[];
+ const html=getCode('html'),css=getCode('css'),js=getCode('js');
+ // Détecte les erreurs de syntaxe JavaScript avant exécution.
+ try{new Function(js)}catch(e){const m=(e.stack||'').match(/<anonymous>:(\\d+):/);issues.push({lang:'js',line:m?Math.max(1,Number(m[1])-3):1,message:e.message,type:'error'})}
+ // Vérification simple des accolades CSS.
+ let depth=0,cssLine=1,openLine=1;
+ for(const ch of css){if(ch==='\\n')cssLine++;if(ch==='{'){depth++;openLine=cssLine}if(ch==='}')depth--}
+ if(depth!==0)issues.push({lang:'css',line:depth>0?openLine:1,message:depth>0?'Accolade ouvrante sans fermeture.':'Accolade fermante inattendue.',type:'error'});
+ // Détecte les balises HTML usuelles non refermées.
+ const voids=new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+ const stack=[];const re=/<\\/?([a-z][\\w-]*)\\b[^>]*>/gi;let match;
+ while((match=re.exec(html))){const tag=match[1].toLowerCase(),closing=match[0].startsWith('</'),line=html.slice(0,match.index).split('\\n').length;
+  if(voids.has(tag)||/\\/>$/.test(match[0]))continue;
+  if(closing){const idx=stack.map(x=>x.tag).lastIndexOf(tag);if(idx<0)issues.push({lang:'html',line,message:'Balise de fermeture </'+tag+'> sans ouverture.',type:'warn'});else stack.splice(idx,1)}
+  else stack.push({tag,line});
+ }
+ stack.forEach(x=>issues.push({lang:'html',line:x.line,message:'Balise <'+x.tag+'> probablement non refermée.',type:'warn'}));
+ return issues;
+}
 function run(){
  clearTimeout(runTimer);
+ const issues=analyseCode();
+ showDiagnostics(issues);
  const frame=$('preview'),doc=getDocument();
  frame.srcdoc=doc;
- $('consoleBody').textContent='Aperçu actualisé.';
- $('consoleCount').textContent='1 message';
- $('consoleBody').className='console-body log-info';
 }
 function scheduleRun(){clearTimeout(runTimer);runTimer=setTimeout(run,450)}
 function saveProject(silent=false){
