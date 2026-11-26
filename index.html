@@ -210,25 +210,37 @@ const suggestionSets={
 let suggestionIndex=0,suggestionItems=[],suggestionRange=null;
 function closeSuggestions(){$('suggestBox').classList.remove('open');$('suggestBox').innerHTML='';suggestionItems=[];suggestionRange=null}
 function updateFallbackSuggestions(){
- if(!fallback||current!=='html'&&current!=='css'&&current!=='js')return closeSuggestions();
- const ta=$('fallbackEditor'),pos=ta.selectionStart,text=ta.value.slice(0,pos),line=text.split('\\n').pop();
+ const ta=$('fallbackEditor');
+ if(editors[current] || !ta || ta.offsetParent===null){closeSuggestions();return}
+ const pos=ta.selectionStart;
+ const before=ta.value.slice(0,pos);
+ const line=before.slice(before.lastIndexOf('\n')+1);
  let prefix='',start=pos,items=[];
  if(current==='html'){
-  const m=line.match(/<([a-zA-Z!\\-]*)$/);
+  const m=line.match(/<([a-zA-Z!]*)$/);
   if(m){prefix=m[1];start=pos-prefix.length;items=suggestionSets.html}
  }else if(current==='css'){
   const m=line.match(/([a-zA-Z-]+)$/);
-  if(m&&(/\\{[^}]*$/.test(text)||/^[ \\t]*[a-z-]*$/.test(line))){prefix=m[1];start=pos-prefix.length;items=suggestionSets.css}
- }else{
+  if(m && (line.includes('{') || line.trim()===m[1])){prefix=m[1];start=pos-prefix.length;items=suggestionSets.css}
+ }else if(current==='js'){
   const m=line.match(/([a-zA-Z_$][\\w$]*)$/);
   if(m){prefix=m[1];start=pos-prefix.length;items=suggestionSets.js}
  }
- const filtered=items.filter(x=>x.toLowerCase().startsWith(prefix.toLowerCase())&&x.toLowerCase()!==prefix.toLowerCase()).slice(0,9);
- if(!filtered.length)return closeSuggestions();
+ const filtered=items.filter(x=>x.toLowerCase().startsWith(prefix.toLowerCase())&&x.toLowerCase()!==prefix.toLowerCase()).slice(0,10);
+ if(!filtered.length){closeSuggestions();return}
  suggestionItems=filtered;suggestionRange={start,end:pos};suggestionIndex=0;
  const box=$('suggestBox');box.innerHTML='';
- filtered.forEach((value,i)=>{const row=document.createElement('div');row.className='suggest-item'+(i===0?' active':'');row.innerHTML='<span class="kind">◆</span><span></span><small>'+current.toUpperCase()+'</small>';row.children[1].textContent=value;row.addEventListener('pointerdown',e=>{e.preventDefault();applySuggestion(i)});box.appendChild(row)});
- const lineNo=text.split('\\n').length-1,lh=21.5,top=Math.max(4,Math.min(ta.clientHeight-205,15+lineNo*lh-ta.scrollTop+lh));
+ filtered.forEach((value,i)=>{
+  const row=document.createElement('div');row.className='suggest-item'+(i===0?' active':'');
+  const kind=document.createElement('span');kind.className='kind';kind.textContent=current==='html'?'‹›':current==='css'?'#':'ƒ';
+  const label=document.createElement('span');label.textContent=value;
+  const type=document.createElement('small');type.textContent=current.toUpperCase();
+  row.append(kind,label,type);
+  row.addEventListener('pointerdown',e=>{e.preventDefault();applySuggestion(i)});
+  box.appendChild(row);
+ });
+ const lineNo=(before.match(/\n/g)||[]).length;
+ const top=Math.max(4,Math.min(ta.clientHeight-190,12+lineNo*21.5-ta.scrollTop+25));
  box.style.top=top+'px';box.style.left='18px';box.classList.add('open');
 }
 function applySuggestion(index){
@@ -366,6 +378,9 @@ $('codeViewBtn').onclick=()=>{$('workspace').classList.remove('show-preview');$(
 $('previewViewBtn').onclick=()=>{$('workspace').classList.add('show-preview');$('previewViewBtn').classList.add('active');$('codeViewBtn').classList.remove('active');run()};
 $('openPreviewBtn').onclick=()=>{const w=window.open();if(w){w.document.open();w.document.write(getDocument());w.document.close()}else toast('Autorise les fenêtres pop-up pour cette action')};
 $('fallbackEditor').addEventListener('input',e=>{code[current]=e.target.value;markUnsaved();scheduleRun();updateFallbackSuggestions()});
+$('fallbackEditor').addEventListener('keyup',e=>{if(!['ArrowUp','ArrowDown','Enter','Tab','Escape'].includes(e.key))updateFallbackSuggestions()});
+$('fallbackEditor').addEventListener('click',updateFallbackSuggestions);
+$('fallbackEditor').addEventListener('focus',updateFallbackSuggestions);
 $('fallbackEditor').addEventListener('keydown',e=>{
  if(!$('suggestBox').classList.contains('open'))return;
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();suggestionIndex=(suggestionIndex+(e.key==='ArrowDown'?1:-1)+suggestionItems.length)%suggestionItems.length;$('suggestBox').querySelectorAll('.suggest-item').forEach((el,i)=>el.classList.toggle('active',i===suggestionIndex))}
