@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b12">
+<title>X'il.Book — Code Studio</title>
+<style>
+:root{--bg:#090b12;--p:#0f1220;--b:#232840;--t:#e6e9f5;--m:#7b839f;--a:#7c5cff;--a2:#22d3ee;--ok:#34d399;--er:#f87171;--mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--t);font:14px system-ui,sans-serif;display:flex;flex-direction:column;height:100dvh;padding-top:env(safe-area-inset-top,0)}
+header{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--p);border-bottom:1px solid var(--b);flex-wrap:wrap}
+.logo{font-weight:800;font-size:16px;letter-spacing:.2px}.logo b{color:var(--a2)}.logo small{color:var(--m);font-weight:600;font-size:10px;margin-left:6px;letter-spacing:2px}
+.sp{flex:1}
+button{font:inherit;color:var(--t);background:#171b2e;border:1px solid var(--b);border-radius:8px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--a)}button.pri{background:var(--a);border-color:var(--a);font-weight:600}
+#st{color:var(--ok);font-size:12px}
+.tabs{display:flex;gap:2px;background:var(--p);padding:0 8px;border-bottom:1px solid var(--b);align-items:center}
+.tab{padding:8px 14px;border:0;border-radius:0;background:none;color:var(--m);border-bottom:2px solid transparent}
+.tab.on{color:var(--t);border-color:var(--a2)}
+#pos{margin-left:auto;color:var(--m);font-size:12px;font-family:var(--mono)}
+main{flex:1;display:flex;min-height:0}
+.left{flex:1;display:flex;flex-direction:column;min-width:0}
+.ed{flex:1;position:relative;overflow:hidden;font:14px/21px var(--mono)}
+#gut{position:absolute;left:0;top:0;bottom:0;width:44px;padding:12px 6px 40px 0;text-align:right;color:#4a5170;overflow:hidden;white-space:pre;background:var(--bg);border-right:1px solid var(--b);user-select:none}
+#hl,#ta{position:absolute;left:44px;right:0;top:0;bottom:0;margin:0;padding:12px 12px 40px;border:0;font:inherit;white-space:pre;tab-size:2;overflow:auto;letter-spacing:0}
+#hl{overflow:hidden;pointer-events:none;color:var(--t)}
+#ta{background:transparent;color:transparent;caret-color:#fff;resize:none;outline:0}
+#ta::selection{background:#7c5cff66}
+.c{color:#5f6a8e;font-style:italic}.t{color:#f472b6}.s{color:#a3e635}.a{color:#fbbf24}.k{color:#a78bfa}.n{color:#fb923c}.f{color:#38bdf8}
+#pop{position:absolute;z-index:5;background:#151a2e;border:1px solid var(--a);border-radius:10px;min-width:230px;max-width:min(360px,90%);box-shadow:0 12px 30px #000a;overflow:hidden;display:none;font:13px system-ui}
+#pop div{padding:6px 10px;display:flex;gap:8px;justify-content:space-between;cursor:pointer}
+#pop div.on{background:var(--a)}#pop b{font-family:var(--mono);font-weight:600}#pop span{color:#aab0cc;font-size:11px;text-align:right}
+#toast{position:absolute;left:54px;bottom:8px;right:8px;background:#0e2a22;border:1px solid var(--ok);color:#b9f5df;padding:6px 10px;border-radius:8px;font:12px system-ui;display:none}
+#learn{background:var(--p);border-top:1px solid var(--b);padding:8px 12px;font-size:13px;min-height:44px;color:#c9cfe8}
+#learn b{color:var(--a2)}
+.pv{width:42%;display:flex;flex-direction:column;border-left:1px solid var(--b);min-width:0}
+.pvh{padding:6px 10px;background:var(--p);border-bottom:1px solid var(--b);color:var(--m);font-size:12px;display:flex;justify-content:space-between}
+iframe{flex:1;border:0;background:#fff;min-height:0}
+#con{height:120px;background:#06070d;border-top:1px solid var(--b);overflow:auto;font:12px/1.5 var(--mono);padding:6px 10px}
+#con .error{color:var(--er)}#con .warn{color:#fbbf24}#con .sys{color:var(--m)}
+#drw{position:fixed;inset:0 0 0 auto;width:min(320px,90vw);background:var(--p);border-left:1px solid var(--b);padding:14px;transform:translateX(100%);transition:.2s;z-index:9;overflow:auto}
+#drw.open{transform:none}
+#drw .it{display:flex;justify-content:space-between;padding:8px;border:1px solid var(--b);border-radius:8px;margin:6px 0;cursor:pointer}
+@media(max-width:800px){.pv{display:none;width:100%;border:0}.pvmode .pv{display:flex}.pvmode .left{display:none}.logo small{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">X'<b>il</b>.Book<small>CODE STUDIO</small></div>
+  <span id="st">● Sauvegardé</span><div class="sp"></div>
+  <button class="pri" id="bRun">▶ Exécuter</button>
+  <button id="bSave">▣ Sauver</button>
+  <button id="bExp">⇩ Exporter</button>
+  <button id="bFmt">⌘ Formater</button>
+  <button id="bLearn" title="Mode apprentissage">🎓</button>
+  <button id="bPrj">▤</button>
+  <button id="bView">Aperçu</button>
+</header>
+<div class="tabs">
+  <button class="tab on" data-l="html">HTML</button><button class="tab" data-l="css">CSS</button><button class="tab" data-l="js">JS</button>
+  <span id="pos">Ligne 1, Col 1</span>
+</div>
+<main>
+  <div class="left">
+    <div class="ed" id="ed">
+      <div id="gut"></div><pre id="hl"></pre>
+      <textarea id="ta" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"></textarea>
+      <div id="pop"></div><div id="toast"></div>
+    </div>
+    <div id="learn"></div>
+  </div>
+  <div class="pv">
+    <div class="pvh"><span>◉ Aperçu en direct</span><span>index.html</span></div>
+    <iframe id="fr" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
+    <div class="pvh"><span>Console</span><a href="#" id="bClr" style="color:var(--a2)">Effacer</a></div>
+    <div id="con"><div class="sys">Prêt. Les messages JavaScript apparaîtront ici.</div></div>
+  </div>
+</main>
+<div id="drw"><b>Mes projets</b> <button id="bNew" style="float:right">+ Nouveau</button><div id="plist" style="margin-top:12px"></div></div>
+
+<script>
+const $=s=>document.querySelector(s),ta=$('#ta'),hlE=$('#hl'),gut=$('#gut'),pop=$('#pop');
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const DEF={html:`<h1>Salut 👋</h1>
+<p class="lead">Tape <b>html</b> puis Tab pour une page complète,
+ou <b>ul>li*3</b> puis Tab pour une liste.</p>
+<button id="btn">Clique-moi</button>`,css:`body {
+  font-family: system-ui, sans-serif;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background: #0f172a;
+  color: white;
+}
+button {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #7c5cff;
+  color: white;
+  cursor: pointer;
+}`,js:`const btn = document.querySelector('#btn');
+let n = 0;
+btn.addEventListener('click', () => {
+  n++;
+  btn.textContent = 'Cliqué ' + n + ' fois';
+  console.log('clic numéro', n);
+});`};
+let S=JSON.parse(localStorage.getItem('xb.cur')||'null')||{...DEF},cur='html',learnOn=localStorage.getItem('xb.learn')!=='0';
+
+/* ---------- Coloration ---------- */
+const RX={html:/(<!--[\s\S]*?-->)|(<\/?[\w-]+|\/?>)|("[^"]*"|'[^']*')|([\w:@-]+(?==))/g,
+css:/(\/\*[\s\S]*?\*\/)|("[^"]*"|'[^']*')|(#[0-9a-fA-F]{3,8}\b|-?\b\d[\w.%]*)|([\w-]+(?=\s*:(?!:)))|([.#@][\w-]+)/g,
+js:/(\/\/.*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|\b(const|let|var|function|return|if|else|for|while|new|class|async|await|try|catch|import|export|from|of|in|true|false|null|undefined|this|switch|case|break|continue|throw)\b|(\b\d[\d.]*\b)|([A-Za-z_$][\w$]*(?=\())/g};
+const CL={html:['c','t','s','a'],css:['c','s','n','a','t'],js:['c','s','k','n','f']};
+function hl(t,l){const r=RX[l],cl=CL[l];let o='',i=0,m;r.lastIndex=0;
+ while(m=r.exec(t)){if(!m[0]){r.lastIndex++;continue}o+=esc(t.slice(i,m.index));let g=1;while(!m[g])g++;o+=`<span class="${cl[g-1]}">${esc(m[0])}</span>`;i=m.index+m[0].length}
+ return o+esc(t.slice(i))}
+
+/* ---------- Dictionnaires (explications + suggestions) ---------- */
+const TAGS={html:'Racine du document : tout le site est dedans',head:'Infos invisibles : titre, styles, scripts',body:'Tout ce qui s’affiche à l’écran',div:'Boîte générique pour regrouper des éléments',span:'Petite boîte en ligne dans un texte',p:'Un paragraphe de texte',h1:'Titre principal (un seul par page)',h2:'Sous-titre',h3:'Titre de niveau 3',a:'Lien cliquable (href = destination)',img:'Affiche une image (src = fichier, alt = description)',ul:'Liste à puces',ol:'Liste numérotée',li:'Un élément de liste',button:'Bouton cliquable',input:'Champ de saisie',form:'Formulaire envoyé au serveur',nav:'Barre de navigation',header:'En-tête de page ou de section',footer:'Pied de page',main:'Contenu principal de la page',section:'Section thématique',script:'Code JavaScript',style:'Code CSS',link:'Relie un fichier externe (CSS...)',meta:'Informations sur la page (encodage, mobile...)',title:'Titre de l’onglet du navigateur',label:'Texte associé à un champ',table:'Tableau de données',br:'Retour à la ligne',textarea:'Zone de texte multi-lignes',select:'Liste déroulante',video:'Lecteur vidéo'};
+const VOID=['br','hr','img','input','meta','link'];
+const PROPS={color:'Couleur du texte',background:'Fond (couleur, image, dégradé)','background-color':'Couleur de fond','font-size':'Taille du texte','font-family':'Police de caractères','font-weight':'Épaisseur du texte (400, 700...)',margin:'Espace EXTÉRIEUR autour de la boîte',padding:'Espace INTÉRIEUR entre bordure et contenu',border:'Bordure (épaisseur style couleur)','border-radius':'Arrondit les angles',width:'Largeur',height:'Hauteur','max-width':'Largeur maximale',display:'Mode d’affichage (block, flex, grid, none...)','flex-direction':'Direction des éléments flex (row/column)','justify-content':'Alignement sur l’axe principal (flex/grid)','align-items':'Alignement sur l’axe secondaire',gap:'Espace entre les éléments flex/grid',position:'Mode de placement (relative, absolute, fixed)',top:'Décalage depuis le haut',left:'Décalage depuis la gauche','z-index':'Ordre d’empilement (plus grand = devant)',overflow:'Que faire si le contenu dépasse','text-align':'Alignement du texte','box-shadow':'Ombre portée',transition:'Anime les changements en douceur',transform:'Déplace, tourne, agrandit',opacity:'Transparence (0 à 1)',cursor:'Forme du curseur souris','grid-template-columns':'Définit les colonnes de la grille','line-height':'Hauteur de ligne','animation':'Lance une animation @keyframes',flex:'Raccourci pour la taille flexible','min-height':'Hauteur minimale','text-decoration':'Soulignement du texte','object-fit':'Adapte une image à sa boîte','backdrop-filter':'Flou derrière l’élément'};
+const JSX=[[/console\.log/,'Affiche une valeur dans la console : idéal pour déboguer'],[/\bconst\b/,'Déclare une variable qui ne sera pas réassignée'],[/\blet\b/,'Déclare une variable modifiable'],[/\bfunction\b/,'Définit une fonction réutilisable'],[/=>/,'Fonction fléchée : écriture courte d’une fonction'],[/\bif\b/,'Condition : exécute le bloc seulement si c’est vrai'],[/\bfor\b/,'Boucle : répète le bloc plusieurs fois'],[/\bwhile\b/,'Boucle : répète tant que la condition est vraie'],[/querySelector/,'Trouve un élément de la page avec un sélecteur CSS'],[/getElementById/,'Trouve un élément grâce à son id'],[/addEventListener/,'Réagit à un événement (clic, clavier...)'],[/fetch\(/,'Envoie une requête réseau (API)'],[/setTimeout/,'Exécute du code après un délai'],[/setInterval/,'Répète du code à intervalle régulier'],[/innerHTML|textContent/,'Change le contenu d’un élément'],[/classList/,'Ajoute/retire des classes CSS'],[/\breturn\b/,'Renvoie une valeur et quitte la fonction'],[/\bawait\b|\basync\b/,'Gère le code asynchrone (attendre une réponse)'],[/\.map\(/,'Transforme chaque élément d’un tableau'],[/\.filter\(/,'Garde seulement les éléments qui passent le test'],[/\.push\(/,'Ajoute un élément à la fin d’un tableau'],[/Math\.random/,'Nombre aléatoire entre 0 et 1'],[/\bclass\b/,'Crée un modèle d’objet'],[/\btry\b/,'Essaie du code et gère les erreurs avec catch']];
+const BOIL='<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>§</title>\n</head>\n<body>\n  \n</body>\n</html>';
+const SNIP={html:[['html',BOIL,'Page HTML5 complète'],['!',BOIL,'Page HTML5 complète'],['link:css','<link rel="stylesheet" href="§">','Relie un fichier CSS'],['script:src','<script src="§"><\/script>','Charge un fichier JS'],['btn','<button type="button" class="btn">§</button>','Bouton'],['form','<form action="§" method="post">\n  \n</form>','Formulaire'],['input:text','<input type="text" name="§" placeholder="">','Champ texte'],['a:link','<a href="§"></a>','Lien']],
+css:[['flex','display: flex;\n  justify-content: center;\n  align-items: center;§','Centre avec Flexbox'],['grid','display: grid;\n  grid-template-columns: repeat(3, 1fr);\n  gap: 16px;§','Grille 3 colonnes'],['center','display: grid;\n  place-items: center;§','Centrage parfait'],['media','@media (max-width: 768px) {\n  §\n}','Adapte au mobile'],['anim','@keyframes nom {\n  from { opacity: 0; }\n  to { opacity: 1; }\n}§','Animation'],['var','--§: ;','Variable CSS']],
+js:[['log','console.log(§);','Affiche dans la console'],['fn','function nom(§) {\n  \n}','Fonction'],['arrow','const nom = (§) => {\n  \n};','Fonction fléchée'],['for','for (let i = 0; i < §; i++) {\n  \n}','Boucle for'],['foreach','§.forEach(item => {\n  \n});','Parcourt un tableau'],['if','if (§) {\n  \n}','Condition'],['ifelse','if (§) {\n  \n} else {\n  \n}','Condition if/else'],['qs','document.querySelector(\'§\')','Sélectionne un élément'],['qsa','document.querySelectorAll(\'§\')','Sélectionne plusieurs éléments'],['ael','§.addEventListener(\'click\', () => {\n  \n});','Écoute un événement'],['fetch','fetch(\'§\')\n  .then(r => r.json())\n  .then(data => console.log(data));','Appel API'],['timeout','setTimeout(() => {\n  §\n}, 1000);','Délai 1s'],['class','class § {\n  constructor() {\n    \n  }\n}','Classe'],['try','try {\n  §\n} catch (e) {\n  console.error(e);\n}','Gestion d’erreur'],['const','const § = ;','Constante'],['let','let § = ;','Variable']]};
+Object.keys(PROPS).forEach(p=>SNIP.css.push([p,p+': §;',PROPS[p]]));
+['document','window','Math','JSON','Array','Object','return','await','async','import'].forEach(k=>SNIP.js.push([k,k+'§','Mot-clé / objet JS']));
+
+/* ---------- Emmet simplifié ---------- */
+function emmet(a){
+ if(!/^[a-z0-9]*([.#][\w-]+)*(\*\d+)?(>[a-z0-9]*([.#][\w-]+)*(\*\d+)?)*$/i.test(a)||!a)return null;
+ const parts=a.split('>');let first=parts[0].match(/^([a-z0-9]*)/i)[1];
+ if(first&&!TAGS[first.toLowerCase()]&&parts.length==1&&!/[.#*]/.test(a))return null;
+ let used=false;
+ const build=(ps,ind)=>{const m=ps[0].match(/^([a-z0-9]*)((?:[.#][\w-]+)*)(?:\*(\d+))?$/i);if(!m)return'';
+  const tag=m[1]||'div',n=+m[3]||1,cls=[...m[2].matchAll(/\.([\w-]+)/g)].map(x=>x[1]),id=(m[2].match(/#([\w-]+)/)||[])[1];
+  let at=(id?` id="${id}"`:'')+(cls.length?` class="${cls.join(' ')}"`:''),out=[];
+  for(let i=0;i<n;i++){let s;
+   if(VOID.includes(tag)){s=`<${tag}${at}${tag=='img'?' src="" alt=""':''}>`;if(!used){s=s.replace('src=""','src="§"');used=true}}
+   else if(ps.length>1)s=`<${tag}${at}>\n${ind}  ${build(ps.slice(1),ind+'  ')}\n${ind}</${tag}>`;
+   else{s=`<${tag}${at}>${used?'':'§'}</${tag}>`;used=true}
+   out.push(s)}
+  return out.join('\n'+ind)};
+ return build(parts,'')}
+
+/* ---------- Éditeur ---------- */
+const mono=document.createElement('span');mono.style.cssText='font:14px var(--mono);position:absolute;visibility:hidden;white-space:pre';mono.textContent='x'.repeat(100);document.body.appendChild(mono);
+const CW=mono.getBoundingClientRect().width/100||8.4,LH=21;
+function render(){const v=ta.value;hlE.innerHTML=hl(v,cur)+'\n';const n=v.split('\n').length;gut.textContent=Array.from({length:n},(_,i)=>i+1).join('\n');sync();info()}
+function sync(){hlE.scrollTop=ta.scrollTop;hlE.scrollLeft=ta.scrollLeft;gut.scrollTop=ta.scrollTop}
+function lineInfo(){const p=ta.selectionStart,b=ta.value.slice(0,p).split('\n');return{r:b.length-1,c:b[b.length-1].length,line:ta.value.split('\n')[b.length-1]||''}}
+function info(){const{r,c,line}=lineInfo();$('#pos').textContent=`Ligne ${r+1}, Col ${c+1}`;explain(line)}
+function explain(line){const L=$('#learn');let t=[];line=line.trim();
+ if(!line){L.innerHTML='🎓 <b>Mode apprentissage</b> — place le curseur sur une ligne : j’explique ce qu’elle fait.';return}
+ if(cur=='html'){if(/<!DOCTYPE/i.test(line))t.push('Annonce au navigateur que c’est du HTML5');
+  const seen=new Set();for(const m of line.matchAll(/<\/?([a-z][\w-]*)/gi)){const g=m[1].toLowerCase();if(TAGS[g]&&!seen.has(g)){seen.add(g);t.push(`<b>&lt;${g}&gt;</b> ${TAGS[g]}`)}}
+  if(/\bclass=/.test(line))t.push('<b>class</b> : nom pour cibler en CSS');if(/\bid=/.test(line))t.push('<b>id</b> : identifiant unique');if(/\bhref=/.test(line))t.push('<b>href</b> : adresse du lien');if(/\bsrc=/.test(line))t.push('<b>src</b> : fichier à charger')}
+ else if(cur=='css'){const m=line.match(/^([\w-]+)\s*:/);if(m&&PROPS[m[1]])t.push(`<b>${m[1]}</b> : ${PROPS[m[1]]}`);
+  else if(/\{$/.test(line)){t.push(line[0]=='.'?'Sélecteur de <b>classe</b> : cible tous les éléments avec cette class':line[0]=='#'?'Sélecteur d’<b>id</b> : cible un seul élément':line[0]=='@'?'Règle spéciale (media query, animation...)':'Sélecteur de <b>balise</b> : cible tous ces éléments')}
+  else if(m)t.push(`<b>${m[1]}</b> : propriété CSS`)}
+ else for(const[r,x]of JSX)if(r.test(line))t.push(x);
+ L.innerHTML=t.length?'💡 '+t.join(' · '):'💡 Continue ! Tape le début d’un mot pour voir les suggestions.'}
+function ins(txt){ta.focus();if(!document.execCommand('insertText',false,txt))ta.setRangeText(txt,ta.selectionStart,ta.selectionEnd,'end')}
+const indent=()=>{const p=ta.selectionStart,s=ta.value.lastIndexOf('\n',p-1)+1;return ta.value.slice(s,p).match(/^\s*/)[0]};
+function toast(m){if(!learnOn)return;const T=$('#toast');T.textContent='✨ '+m;T.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>T.style.display='none',3500)}
+
+/* ---------- Suggestions ---------- */
+let ac={items:[],i:0,s:0};
+function suggest(force){
+ const p=ta.selectionStart,b=ta.value.slice(0,p);let items=[],s=p,m;
+ if(cur=='html'&&(m=b.match(/<([\w-]*)$/))){const w=m[1].toLowerCase();s=p-w.length;
+  items=Object.keys(TAGS).filter(k=>k.startsWith(w)&&k!=w).sort().map(k=>({l:k,t:VOID.includes(k)?k+' §>':k+'>§</'+k+'>',d:TAGS[k]}))}
+ else{m=b.match(cur=='html'?/[\w!:.#>*-]+$/:/[\w$-]+$/);const w=m?m[0]:'';if(!w&&!force)return hide();s=p-w.length;const lw=w.toLowerCase();
+  if(cur=='html'&&w){const e=emmet(w);if(e&&!(w in TAGS&&!/[.#*>]/.test(w)&&false))items.push({l:w,t:e,d:'Emmet → '+e.replace(/\n\s*/g,' ').replace('§','').slice(0,40)})}
+  const L=SNIP[cur].filter(x=>x[0].toLowerCase().startsWith(lw)&&x[0]!=w||(x[0]==w&&x[1]!=w+'§'&&cur!='css')).map(x=>({l:x[0],t:x[1],d:x[2]}));
+  items=L.filter(x=>x.l==w).concat(items,L.filter(x=>x.l!=w))}
+ items=items.slice(0,8);if(!items.length)return hide();
+ ac={items,i:0,s};showPop()}
+function showPop(){pop.innerHTML=ac.items.map((x,i)=>`<div class="${i==ac.i?'on':''}" data-i="${i}"><b>${esc(x.l)}</b><span>${esc(x.d)}</span></div>`).join('');pop.style.display='block';
+ const{r,c}=lineInfo(),ed=$('#ed');let x=44+12+c*CW-ta.scrollLeft,y=12+(r+1)*LH-ta.scrollTop;
+ x=Math.max(50,Math.min(x,ed.clientWidth-pop.offsetWidth-6));if(y+pop.offsetHeight>ed.clientHeight)y-=LH+pop.offsetHeight;
+ pop.style.left=x+'px';pop.style.top=Math.max(0,y)+'px'}
+function hide(){pop.style.display='none';ac.items=[]}
+function accept(it){const ind=indent();ta.setSelectionRange(ac.s,ta.selectionStart);let t=it.t.replace(/\n/g,'\n'+ind);const i=t.indexOf('§');t=t.replace('§','');
+ ins(t);if(i>=0)ta.setSelectionRange(ac.s+i,ac.s+i);hide();toast(`${it.l} → ${it.d}`)}
+pop.addEventListener('mousedown',e=>{e.preventDefault();const d=e.target.closest('[data-i]');if(d)accept(ac.items[+d.dataset.i])});
+
+ta.addEventListener('input',e=>{render();autosave();if(/^delete/.test(e.inputType||''))return hide();suggest()});
+ta.addEventListener('scroll',()=>{sync();hide()});
+ta.addEventListener('keyup',e=>{if(!['ArrowUp','ArrowDown','Enter','Tab','Escape'].includes(e.key))info()});
+ta.addEventListener('click',()=>{hide();info()});
+ta.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==ta)hide()},150));
+const PAIR={'(':')','[':']','{':'}','"':'"',"'":"'",'`':'`'};
+ta.addEventListener('keydown',e=>{
+ const open=pop.style.display=='block';
+ if(open){if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();ac.i=(ac.i+(e.key=='ArrowDown'?1:ac.items.length-1))%ac.items.length;return showPop()}
+  if(e.key=='Enter'||e.key=='Tab'){e.preventDefault();return accept(ac.items[ac.i])}
+  if(e.key=='Escape'){e.preventDefault();return hide()}}
+ if((e.ctrlKey||e.metaKey)&&e.key==' '){e.preventDefault();return suggest(true)}
+ if((e.ctrlKey||e.metaKey)&&e.key=='Enter'){e.preventDefault();return run(true)}
+ if((e.ctrlKey||e.metaKey)&&e.key=='s'){e.preventDefault();return save()}
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ const p=ta.selectionStart,v=ta.value,sel=p!=ta.selectionEnd,a=v[p-1],nx=v[p];
+ if(e.key=='Tab'){e.preventDefault();return ins('  ')}
+ if(e.key=='Enter'&&!sel){e.preventDefault();const ind=indent();
+  if((a=='{'&&nx=='}')||(a=='['&&nx==']')||(a=='('&&nx==')')||(a=='>'&&v.slice(p,p+2)=='</')){ins('\n'+ind+'  \n'+ind);const q=p+ind.length+3;return ta.setSelectionRange(q,q)}
+  return ins('\n'+ind+(/[{[(]/.test(a)?'  ':''))}
+ if(sel)return;
+ if(e.key=='>'&&cur=='html'){const m=v.slice(0,p).match(/<([a-z][\w-]*)(?:\s[^<>]*)?$/i);
+  if(m&&!VOID.includes(m[1].toLowerCase())&&!/\/$/.test(v.slice(0,p))){e.preventDefault();ins('></'+m[1]+'>');const q=p+1;return ta.setSelectionRange(q,q)}}
+ if(')]}"\'`'.includes(e.key)&&nx==e.key){e.preventDefault();return ta.setSelectionRange(p+1,p+1)}
+ if(PAIR[e.key]){if('"\'`'.includes(e.key)&&/\w/.test(a||''))return;e.preventDefault();ins(e.key+PAIR[e.key]);ta.setSelectionRange(p+1,p+1)}
+});
+
+/* ---------- Onglets, exécution, console ---------- */
+function load(l){S[cur]=ta.value;cur=l;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.l==l));ta.value=S[l];ta.scrollTop=0;hide();render();ta.focus()}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>load(t.dataset.l));
+const CONS='<script>(function(){const s=(t,a)=>parent.postMessage({xb:1,t:t,m:a.map(x=>{try{return typeof x=="object"?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(" ")},"*");["log","warn","error","info"].forEach(k=>{const o=console[k];console[k]=(...a)=>{s(k,a);o.apply(console,a)}});onerror=(m,u,l)=>{s("error",[m+" (ligne "+l+")"])};addEventListener("unhandledrejection",e=>s("error",[e.reason]))})()<\/script>';
+function doc(withCons){S[cur]=ta.value;let h=S.html;const css='<style>\n'+S.css+'\n</style>',js='<script>\n'+S.js.replace(/<\/script/gi,'<\\/script')+'\n<\/script>';
+ h=/<\/head>/i.test(h)?h.replace(/<\/head>/i,m=>css+m):css+h;
+ h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,m=>js+m):h+js;
+ if(withCons)h=/<head[^>]*>/i.test(h)?h.replace(/<head[^>]*>/i,m=>m+CONS):CONS+h;return h}
+let rt;function autosave(){$('#st').textContent='● Modifié';$('#st').style.color='#fbbf24';clearTimeout(rt);rt=setTimeout(()=>{save();run()},700)}
+function run(manual){$('#fr').srcdoc=doc(true);if(manual&&innerWidth<=800)document.body.classList.add('pvmode')}
+function save(){S[cur]=ta.value;localStorage.setItem('xb.cur',JSON.stringify(S));$('#st').textContent='● Sauvegardé';$('#st').style.color=''}
+addEventListener('message',e=>{const d=e.data;if(!d||!d.xb)return;const c=$('#con'),x=document.createElement('div');x.className=d.t;x.textContent='› '+d.m;c.appendChild(x);c.scrollTop=1e9});
+$('#bClr').onclick=e=>{e.preventDefault();$('#con').innerHTML='<div class="sys">Console effacée.</div>'};
+$('#bRun').onclick=()=>run(true);$('#bSave').onclick=save;
+$('#bView').onclick=()=>{const on=document.body.classList.toggle('pvmode');$('#bView').textContent=on?'Code':'Aperçu';if(on)run()};
+$('#bExp').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([doc(false)],{type:'text/html'}));a.download='projet.html';a.click()};
+$('#bLearn').onclick=()=>{learnOn=!learnOn;localStorage.setItem('xb.learn',learnOn?'1':'0');$('#learn').style.display=learnOn?'':'none';$('#bLearn').style.opacity=learnOn?1:.4};
+$('#learn').style.display=learnOn?'':'none';$('#bLearn').style.opacity=learnOn?1:.4;
+
+/* ---------- Formatage ---------- */
+$('#bFmt').onclick=()=>{let d=0,L=ta.value.split('\n').map(x=>x.trim());
+ if(cur=='html'){L=L.filter((x,i)=>x||L[i-1]);L=L.map(x=>{const o=(x.match(/<(?!\/|!|(?:br|hr|img|input|meta|link)\b)[a-z][\w-]*(?:\s[^>]*)?(?<!\/)>/gi)||[]).length,c=(x.match(/<\/[a-z]/gi)||[]).length,pd=Math.max(0,d-(/^<\//.test(x)?1:0));d=Math.max(0,d+o-c);return x?'  '.repeat(pd)+x:x})}
+ else L=L.map(x=>{const o=(x.match(/[{[(]/g)||[]).length,c=(x.match(/[}\])]/g)||[]).length,pd=Math.max(0,d-(/^[}\])]/.test(x)?1:0));d=Math.max(0,d+o-c);return x?'  '.repeat(pd)+x:x});
+ ta.select();ins(L.join('\n'));toast('Code reformaté : indentation propre = code lisible')};
+
+/* ---------- Projets ---------- */
+const PR=()=>JSON.parse(localStorage.getItem('xb.prj')||'{}');
+function plist(){const P=PR(),l=$('#plist');l.innerHTML=Object.keys(P).map(k=>`<div class="it" data-k="${esc(k)}"><span>${esc(k)}</span><span data-d="${esc(k)}">✕</span></div>`).join('')||'<small style="color:var(--m)">Aucun projet. Clique « + Nouveau » pour sauver celui-ci.</small>'}
+$('#bPrj').onclick=()=>{plist();$('#drw').classList.add('open')};
+$('#bNew').onclick=()=>{const n=prompt('Nom du projet ?');if(!n)return;S[cur]=ta.value;const P=PR();P[n]={...S};localStorage.setItem('xb.prj',JSON.stringify(P));plist()};
+$('#plist').onclick=e=>{const P=PR(),d=e.target.dataset.d,it=e.target.closest('.it');
+ if(d){delete P[d];localStorage.setItem('xb.prj',JSON.stringify(P));return plist()}
+ if(it){S={...P[it.dataset.k]};ta.value=S[cur];render();run();$('#drw').classList.remove('open')}};
+document.addEventListener('click',e=>{if(!e.target.closest('#drw,#bPrj'))$('#drw').classList.remove('open')});
+
+ta.value=S.html;render();run();
+</script>
+</body>
+</html>
