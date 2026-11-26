@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090b12">
-<title>X'il.Book — Code Studio</title>
+<title>Code'X — Code Studio</title>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
@@ -77,11 +77,43 @@ input[type=text]{background:#0c111b;border:1px solid var(--line);color:var(--tex
  .bottom-editor{height:25px;flex-shrink:0}
 }
 
+
+/* CODE'X — refresh visuel uniquement */
+:root{--bg:#080b14;--panel:#0e1422;--panel2:#141d30;--line:#25334a;--text:#f2f5ff;--muted:#8997b2;--accent:#8b5cf6;--accent2:#38bdf8;--green:#34d399;--red:#fb7185;--top:62px}
+html,body{background:radial-gradient(ellipse at 12% 0%,#18213b 0%,#090d18 42%,#070a12 100%);color:var(--text)}
+header{height:62px;padding:0 16px;gap:15px;background:rgba(10,15,27,.96);border-bottom:1px solid #28334a;box-shadow:0 8px 24px #0003;backdrop-filter:blur(16px)}
+.logo{font-size:20px;letter-spacing:-1.1px;font-weight:900;color:#f8fafc}.logo b{color:#a78bfa}.brand-apostrophe{color:#38bdf8}.logo small{font-size:8px;letter-spacing:2.6px;color:#8fa2c4;margin-top:1px}
+.project-name{background:#151e30;border:1px solid #293752;border-radius:11px;width:min(230px,34vw);padding:9px 12px;font-size:13px;transition:border-color .2s,background .2s}.project-name:focus{outline:none;border-color:#8b5cf6;background:#1a2440}
+.header-actions button,.toolbar button,.preview-head button{border:1px solid #2b3852;background:linear-gradient(180deg,#1a2539,#121a2b);border-radius:11px;min-height:38px;box-shadow:0 3px 10px #0002;transition:background .18s,border-color .18s,transform .18s}
+.header-actions button:hover,.toolbar button:hover,.preview-head button:hover{border-color:#6476a0;background:#202d46}
+button.primary{background:linear-gradient(115deg,#8b5cf6,#5865e8 65%,#398bdc);border:1px solid #9c83ff;box-shadow:0 5px 18px #7652ef44;color:#fff;font-weight:750}
+main{height:calc(100dvh - 62px)}.toolbar{height:56px;padding:7px 14px;gap:9px;background:rgba(13,19,32,.96);border-bottom:1px solid #26334a}.toolbar button{padding:8px 14px;font-size:13px;font-weight:650}
+.workspace{background:transparent}
+.right{background:#fff;border:1px solid #2a3852;border-radius:15px 15px 0 0;overflow:hidden;box-shadow:0 0 35px #0002}
+.preview-head{height:46px;padding:0 14px;background:linear-gradient(90deg,#131d30,#101827);border-bottom:1px solid #2a3852}.preview-head strong{font-size:13px;letter-spacing:.15px}.preview-frame-wrap{background:#fff}
+.console{border-top:1px solid #2a3852;background:#0b1120}.console-head{height:36px;background:#111a2b;border-bottom:1px solid #28344a}.console-head strong{font-size:12px;letter-spacing:.3px}.console-head button{background:#1b2940;border-radius:8px;padding:5px 10px}.console-body{font-size:11px;color:#a9bad6}
+.left{background:#0d1422;border:1px solid #2a3852;border-radius:0 0 15px 15px;overflow:hidden;box-shadow:0 12px 30px #0002}
+.editor-top{height:47px;padding:0 12px;gap:7px;background:linear-gradient(90deg,#151e30,#101827);border-bottom:1px solid #2a3852}
+.tab{padding:9px 14px;border:1px solid transparent;border-radius:9px;font-size:12px;letter-spacing:.2px;transition:.18s}
+.tab.active{color:#e9ddff;background:linear-gradient(135deg,#39275e,#292449);border-color:#6550a0;box-shadow:inset 0 0 0 1px #a78bfa22}
+.tab .dot{width:8px;height:8px;box-shadow:0 0 9px currentColor}
+.editor-area{background:#111827}.CodeMirror{font-size:13px;line-height:1.72;padding-top:8px}.CodeMirror-gutters{background:#0e1625;border-right:1px solid #26344b}.CodeMirror-linenumber{color:#65748f}.CodeMirror-cursor{border-left:2px solid #a78bfa!important}
+.CodeMirror-hints,#suggestBox{background:#111b2d;border:1px solid #7861c7;border-radius:12px;box-shadow:0 16px 42px #0009;padding:6px}.CodeMirror-hint{padding:8px 11px;border-radius:7px}.CodeMirror-hint-active,.suggest-item.active{background:#493675;color:#fff}.suggest-item{padding:9px 10px;border-radius:8px}.suggest-item .kind{color:#67d4ff}.suggest-item small{color:#9eacc5}
+.bottom-editor{height:34px;background:#0d1524;border-top:1px solid #26344b;color:#91a0bb;font-size:11px}
+#toast{background:#1b2540;border:1px solid #7861c7;color:#e9e4ff;box-shadow:0 10px 30px #0006}.drawer-card{background:#101a2b;border:1px solid #33415d;box-shadow:0 -15px 45px #0005}.project-item{background:#17243a;border-color:#30405c}input[type=text]{background:#0b1322;border-color:#30405c}
+@media(max-width:760px){
+ header{height:58px;padding:0 11px;gap:9px}.logo{font-size:18px}.logo small{font-size:7px;letter-spacing:2px}.project-name{width:clamp(90px,32vw,150px);font-size:12px;padding:8px}
+ .header-actions{gap:5px}.header-actions button{min-width:36px;min-height:36px;padding:6px 9px}main{height:calc(100dvh - 58px)}
+ .toolbar{height:51px;padding:6px 9px;gap:7px}.toolbar button{padding:8px 11px;font-size:12px;min-height:36px}
+ .workspace{gap:0}.right{border-radius:12px 12px 0 0}.left{border-radius:0 0 12px 12px}
+ .preview-head{height:39px;padding:0 10px}.preview-head strong{font-size:12px}.editor-top{height:42px;padding:0 8px;gap:3px}.tab{padding:8px 10px;font-size:11px}
+ .bottom-editor{height:29px;padding:0 9px;font-size:10px}.console-head{height:31px}.console-body{font-size:10px}
+}
 </style>
 </head>
 <body>
 <header>
- <div class="logo">X'<b>il</b>.Book<small>CODE STUDIO</small></div>
+ <div class="logo">Code<span class="brand-apostrophe">'</span><b>X</b><small>WEB CODE STUDIO</small></div>
  <input class="project-name" id="projectName" value="Mon premier projet" aria-label="Nom du projet">
  <div class="header-actions">
   <span class="status" id="saveStatus">● Sauvegardé</span>
