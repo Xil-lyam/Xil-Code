@@ -811,6 +811,32 @@ let flashT;function flash(m){let h=$('#bkh');if(!h){h=document.createElement('di
   last=Date.now();history.pushState({xb:2},'');flash('Appuie encore sur Retour pour quitter')});
 })();
 if(!/<html[\s>]/i.test(S.html)){const ch=linkAll();if(ch.length)flash('Ton projet est maintenant en HTML5 complet ✔')}
+ /* ---------- Retour à la ligne automatique ---------- */
+(function(){
+ const st=document.createElement('style');
+ st.textContent='#hl,#ta{white-space:pre-wrap!important;word-break:break-all;overflow-wrap:anywhere}#ta{overflow-x:hidden!important}#mir{position:absolute;left:var(--gw);top:0;visibility:hidden;pointer-events:none;margin:0;padding:6px 8px 30px;font:inherit;white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;tab-size:2;box-sizing:border-box}';
+ document.head.appendChild(st);
+ ta.setAttribute('wrap','soft');
+ new ResizeObserver(()=>schedRender()).observe(ta);
+})();
+let LHx=21;
+function mir(){let m=document.getElementById('mir');if(!m){m=document.createElement('div');m.id='mir';$('#ed').appendChild(m)}m.style.width=ta.clientWidth+'px';return m}
+function caretXY(){const m=mir();m.textContent=ta.value.slice(0,ta.selectionStart);const s=document.createElement('span');s.textContent='\u200b';m.appendChild(s);return{x:s.offsetLeft,y:s.offsetTop}}
+function gutter(){
+ if(!ta.clientWidth)return;
+ LHx=parseFloat(getComputedStyle(ta).lineHeight)||21;
+ hlE.style.paddingRight=(8+ta.offsetWidth-ta.clientWidth)+'px';
+ const E=ERR[cur]||{},L=ta.value.split('\n'),m=mir();
+ m.innerHTML=L.map(l=>'<div>'+(esc(l)||'&nbsp;')+'</div>').join('');
+ const h=[...m.children].map(d=>Math.max(1,Math.round(d.offsetHeight/LHx)));
+ gut.innerHTML=L.map((_,i)=>'<div style="height:'+h[i]*LHx+'px">'+(E[i+1]?'<span class="ge" data-m="'+esc(E[i+1]).replace(/"/g,'&quot;')+'">'+(i+1)+'</span>':i+1)+'</div>').join('')}
+function render(){const v=ta.value;hlE.innerHTML=hl(v,cur)+'\n';lc=v.split('\n').length;gcur=cur;gutter();sync();info()}
+function showPop(){pop.innerHTML=ac.items.map((x,i)=>`<div class="${i==ac.i?'on':''}" data-i="${i}"><b>${esc(x.l)}</b><span>${esc(x.d)}</span></div>`).join('');pop.style.display='block';
+ const ed=$('#ed'),k=caretXY();let x=gut.offsetWidth+k.x,y=k.y+LHx-ta.scrollTop;
+ x=Math.max(50,Math.min(x,ed.clientWidth-pop.offsetWidth-6));if(y+pop.offsetHeight>ed.clientHeight)y-=LHx+pop.offsetHeight;
+ pop.style.left=x+'px';pop.style.top=Math.max(0,y)+'px'}
+function happly(n){ta.value=n.v;ta.setSelectionRange(n.s,n.e);hide();render();const y=caretXY().y;if(y<ta.scrollTop||y>ta.scrollTop+ta.clientHeight-LHx*2)ta.scrollTop=Math.max(0,y-ta.clientHeight/2);autosave();hbtn()}
+function gotoLine(n){const L=ta.value.split('\n');let p=0;for(let i=0;i<n-1&&i<L.length;i++)p+=L[i].length+1;ta.focus();ta.setSelectionRange(p,p+(L[n-1]||'').length);ta.scrollTop=Math.max(0,caretXY().y-LHx*3);sync()}
 </script>
 </body>
 </html>
