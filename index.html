@@ -10,11 +10,14 @@ const m={name:"Xil'code",short_name:"Xil'code",description:"Éditeur HTML/CSS/JS
 icons:[192,512].flatMap(n=>["any","maskable"].map(p=>({src:d+"icon-"+n+".png",sizes:n+"x"+n,type:"image/png",purpose:p})))};
 const l=document.createElement('link');l.rel='manifest';l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));document.head.appendChild(l)}catch(e){}})();
 </script>
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Xil'code">
+<meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#150c08">
 <title>Xil'code</title>
 <style>
@@ -783,6 +786,9 @@ if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))addEventLis
 let dip;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('#bInst').style.display=''});
 $('#bInst').onclick=async()=>{if(!dip)return;dip.prompt();await dip.userChoice;dip=null;$('#bInst').style.display='none'};
 addEventListener('appinstalled',()=>{$('#bInst').style.display='none'});
+const IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const STANDALONE=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
+if(IOS&&!STANDALONE){$('#bInst').style.display='';$('#bInst').onclick=()=>alert("Pour installer sur iPhone / iPad :\n\n1. Ouvre cette page dans Safari\n2. Appuie sur le bouton Partager (le carré avec la flèche ⬆️)\n3. Choisis « Sur l'écran d'accueil »\n4. Appuie sur « Ajouter »")}
 
 let flashT;function flash(m){let h=$('#bkh');if(!h){h=document.createElement('div');h.id='bkh';h.style.cssText='position:fixed;left:50%;bottom:calc(60px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:99;background:var(--p2);border:1.5px solid var(--or);color:var(--t);padding:9px 16px;border-radius:999px;font:700 13px system-ui;box-shadow:0 8px 24px #000a;display:none;max-width:90vw;text-align:center';document.body.appendChild(h)}
  h.textContent=m;h.style.display='block';clearTimeout(flashT);flashT=setTimeout(()=>h.style.display='none',2600)}
